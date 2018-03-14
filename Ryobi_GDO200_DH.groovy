@@ -25,6 +25,7 @@ metadata {
 			capability "Sensor"
             capability "Polling"
             capability "Refresh"
+			capability "Battery"
 	}
 
     attribute "switch", "string"
@@ -56,7 +57,10 @@ metadata {
          standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
             state "default", action:"refresh", icon:"st.secondary.refresh"
         }
-        valueTile("icon", "device.icon", inactiveLabel: false, decoration: "flat", width: 3, height: 1) {
+		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
+            state "battery", label: 'Battery: ${currentValue}%'
+        }
+        valueTile("icon", "device.icon", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
             state "default", label: '', icon: "https://logo-png.com/logo/ryobi-logo.png"
         }
 		main "door"
@@ -75,8 +79,10 @@ getStatus()
 def parse(String description){
 	def msg = parseLanMessage(description)
     if (msg.body.startsWith("status:")) {
+		def batstatus = msg.body.split(':')[3]
     	def doorstatus = msg.body.split(':')[2]
     	def lightstatus = msg.body.split(':')[1]
+		sendEvent(name: "battery", value: batstatus)
     	if (lightstatus == "false") {
         log.debug "Light OFF"
         sendEvent(name: "switch2", value: "off")

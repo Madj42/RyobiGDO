@@ -95,7 +95,8 @@ const someController = async function() {
     var someValue = await doSomething()
                 var lightval = someValue.result[0].deviceTypeMap.garageLight_7.at.lightState.value
                 var doorval = someValue.result[0].deviceTypeMap.garageDoor_7.at.doorState.value
-                response.end('status:' + String(lightval) + ':' + String(doorval))
+                var batval = someValue.result[0].deviceTypeMap.backupCharger_8.at.chargeLevel.value
+                response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
 
 }
 
