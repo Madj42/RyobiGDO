@@ -46,8 +46,8 @@ metadata {
 			tileAttribute("device.switch1", key: "PRIMARY_CONTROL") {
             attributeState "closed", label: 'Door Closed', action: "dooropen", icon: "st.Home.home2", backgroundColor: "#ffffff", nextState: "opening"
 			attributeState "open", label: 'Door Open', action: "doorclose", icon: "st.Home.home2", backgroundColor: "#79b821", nextState: "closing"
-            attributeState "closing", label:'Door Closing', action:"doorclose", icon:"st.Home.home2", backgroundColor:"#00a0dc", nextState:"on"
-			attributeState "opening", label:'Door Opening', action:"dooropen", icon:"st.Home.home2", backgroundColor:"#79b821", nextState:"off"
+            attributeState "closing", label:'Door Closing', action:"doorclose", icon:"st.Home.home2", backgroundColor:"#00a0dc", nextState:"closed"
+			attributeState "opening", label:'Door Opening', action:"dooropen", icon:"st.Home.home2", backgroundColor:"#79b821", nextState:"open"
             }
         }
         standardTile("button2", "device.switch2", width: 1, height: 1, canChangeIcon: false) {
