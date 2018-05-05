@@ -108,7 +108,6 @@ const someController = async function() {
                 }
                 else if (device.includes('backupCharger')) {
                         var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
-                        console.log(batval)
                 }
 }
 response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
