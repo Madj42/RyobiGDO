@@ -1,6 +1,7 @@
 /*
 * Author: Justin Dybedahl
 * Ryobi GDO200 Device Handler
+* v1.1
 */
 
 
@@ -25,7 +26,7 @@ metadata {
 			capability "Sensor"
             capability "Polling"
             capability "Refresh"
-			capability "Battery"
+            capability "battery"
 	}
 
     attribute "switch", "string"
@@ -57,14 +58,14 @@ metadata {
          standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
             state "default", action:"refresh", icon:"st.secondary.refresh"
         }
-		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
+        valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
             state "battery", label: 'Battery: ${currentValue}%'
         }
         valueTile("icon", "device.icon", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
             state "default", label: '', icon: "https://logo-png.com/logo/ryobi-logo.png"
         }
 		main "door"
-			details (["door","button","button2","refresh","icon"])
+			details (["door","button","button2","refresh","battery","icon"])
             }
 }
 
@@ -77,12 +78,13 @@ getStatus()
 }
 
 def parse(String description){
+log.debug "Parse called"
 	def msg = parseLanMessage(description)
     if (msg.body.startsWith("status:")) {
-		def batstatus = msg.body.split(':')[3]
+    	def batstatus = msg.body.split(':')[3]
     	def doorstatus = msg.body.split(':')[2]
     	def lightstatus = msg.body.split(':')[1]
-		sendEvent(name: "battery", value: batstatus)
+        sendEvent(name: "battery", value: batstatus)
     	if (lightstatus == "false") {
         log.debug "Light OFF"
         sendEvent(name: "switch2", value: "off")
@@ -166,15 +168,48 @@ def result = new physicalgraph.device.HubAction(
             runIn(25,getStatus)
 			log.debug "CLOSING Garage Door" 
             }
-            
+  
+
+
 def getStatus() {
 	def result = new physicalgraph.device.HubAction(
 				method: "GET",
 				path: "/?name=status&doorid=${doorid}&apikey=${apikey}&email=${email}&pass=${pass}",
 				headers: [
 				HOST: "${internal_ip}:${internal_port}"
-				],
-				)
+				])
 			sendHubCommand(result)
 			log.debug "Getting Status"
 	}
+    
+private String convertIPtoHex(ipAddress) { 
+    String hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02x', it.toInteger() ) }.join()
+    //log.debug "IP address entered is $ipAddress and the converted hex code is $hex"
+    return hex
+
+}
+
+private String convertPortToHex(port) {
+    String hexport = port.toString().format( '%04x', port.toInteger() )
+    //log.debug hexport
+    return hexport
+}
+
+def updated() {
+	if (!state.updatedLastRanAt || now() >= state.updatedLastRanAt + 5000) {
+		state.updatedLastRanAt = now()
+		log.debug "Executing 'updated()'"
+    	runIn(3, "updateDeviceNetworkID")
+	}
+	else {
+//		log.trace "updated(): Ran within last 5 seconds so aborting."
+	}
+}
+
+
+def updateDeviceNetworkID() {
+	log.debug "Executing 'updateDeviceNetworkID'"
+    def iphex = convertIPtoHex(internal_ip).toUpperCase()
+    def porthex = convertPortToHex(internal_port)
+	device.setDeviceNetworkId(iphex + ":" + porthex)
+}

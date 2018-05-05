@@ -1,6 +1,11 @@
-// Ryobi GDO Proxy for Node.js
-// content of index.js
-// content of index.js
+// Project Name: Ryobi GDO Proxy for Node.js
+// Version: 1.1
+// Author: Justin Dybedahl
+//
+// https://github.com/Madj42/RyobiGDO/
+//
+
+
 const http = require('http')
 const url = require('url')
 var WebSocket = require('ws')
@@ -9,10 +14,10 @@ const port = 3042
 const requestHandler = (request, response) => {
 const queryData = url.parse(request.url, true).query;
         response.writeHead(200, {"Content-Type": "text/plain"});
-        var reqip = request.connection.remoteAddress.split(':')
-        if (reqip[3] !== '192.168.42.239') {
-        response.end('Not Authorized')
-        }
+//        var reqip = request.connection.remoteAddress.split(':')
+//        if (reqip[3] !== 'x.x.x.x') {
+//        response.end('Not Authorized')
+//        }
 //console.log(request.url)
         if (queryData.name == 'lighton') {
                 var cmd = 'lightState'
@@ -99,7 +104,6 @@ const someController = async function() {
                 response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
 
 }
-
 someController()
 
 }
@@ -113,4 +117,5 @@ server.listen(port, (err) => {
   }
 
   console.log(`server is listening on ${port}`)
-})
+}
+)
