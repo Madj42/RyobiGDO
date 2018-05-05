@@ -78,7 +78,7 @@ getStatus()
 }
 
 def parse(String description){
-log.debug "Parse called"
+//log.debug "Parse called"
 	def msg = parseLanMessage(description)
     if (msg.body.startsWith("status:")) {
     	def batstatus = msg.body.split(':')[3]
@@ -86,23 +86,23 @@ log.debug "Parse called"
     	def lightstatus = msg.body.split(':')[1]
         sendEvent(name: "battery", value: batstatus)
     	if (lightstatus == "false") {
-        log.debug "Light OFF"
+        //log.debug "Light OFF"
         sendEvent(name: "switch2", value: "off")
    		} else if (lightstatus == "true") {
-        log.debug "Light ON"
+        //log.debug "Light ON"
         sendEvent(name: "switch2", value: "on")
         }
        	if (doorstatus == "0") {
-        log.debug "Door Closed"
+        //log.debug "Door Closed"
         sendEvent(name: "switch1", value: "closed")
    		} else if (doorstatus == "1") {
-        log.debug "Door Open"
+        //log.debug "Door Open"
         sendEvent(name: "switch1", value: "open")
         } else if (doorstatus == "2") {
-        log.debug "Door Closing"
+        //log.debug "Door Closing"
         sendEvent(name: "switch1", value: "closing")
         } else if (doorstatus == "3") {
-        log.debug "Door Opening"
+        //log.debug "Door Opening"
         sendEvent(name: "switch1", value: "opening")
         }
     }
@@ -210,6 +210,6 @@ def updated() {
 def updateDeviceNetworkID() {
 	log.debug "Executing 'updateDeviceNetworkID'"
     def iphex = convertIPtoHex(internal_ip).toUpperCase()
-    def porthex = convertPortToHex(internal_port)
+    def porthex = convertPortToHex(internal_port).toUpperCase()
 	device.setDeviceNetworkId(iphex + ":" + porthex)
 }
