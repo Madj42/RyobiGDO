@@ -98,11 +98,20 @@ var options = {url:'https://tti.tiwiconnect.com/api/devices/' + queryData.doorid
 
 const someController = async function() {
     var someValue = await doSomething()
-                var lightval = someValue.result[0].deviceTypeMap.garageLight_7.at.lightState.value
-                var doorval = someValue.result[0].deviceTypeMap.garageDoor_7.at.doorState.value
-                var batval = someValue.result[0].deviceTypeMap.backupCharger_8.at.chargeLevel.value
-                response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
-
+        // someValue2 = someValue.result[0].deviceTypeMap
+        for(var device in someValue.result[0].deviceTypeMap) {
+                if (device.includes('garageDoor')) {
+                        var doorval = someValue.result[0].deviceTypeMap[device].at.doorState.value
+                }
+                else if (device.includes('garageLight')) {
+                        var lightval = someValue.result[0].deviceTypeMap[device].at.lightState.value
+                }
+                else if (device.includes('backupCharger')) {
+                        var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
+                        console.log(batval)
+                }
+}
+response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
 }
 someController()
 
