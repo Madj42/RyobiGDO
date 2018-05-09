@@ -1,7 +1,7 @@
 /*
 * Author: Justin Dybedahl
 * Ryobi GDO200 Device Handler
-* v1.1
+* v1.2
 */
 
 
@@ -12,7 +12,7 @@ preferences {
 		input "apikey", "text", title: "API Key",required: true		
 		input "doorid", "text", title: "Garage Door ID",required: true
 		input "internal_ip", "text", title: "Internal IP", required: true
-		input "internal_port", "text", title: "Internal Port (if not 3042)", required: true
+		input "internal_port", "text", title: "Internal Port (default is 3042)", required: true
 	}
 }
 
@@ -84,7 +84,13 @@ def parse(String description){
     	def batstatus = msg.body.split(':')[3]
     	def doorstatus = msg.body.split(':')[2]
     	def lightstatus = msg.body.split(':')[1]
-        sendEvent(name: "battery", value: batstatus)
+	if (batstatus == "255") {
+	//sendEvent(name: "battery", value: "0")
+	} else if (batstatus == null) {
+	//sendEvent(name: "battery", value: "0")
+	} else {
+	sendEvent(name: "battery", value: batstatus)
+	}
     	if (lightstatus == "false") {
         //log.debug "Light OFF"
         sendEvent(name: "switch2", value: "off")
