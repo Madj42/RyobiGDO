@@ -96,8 +96,7 @@ const someController = async function() {
                         var lightval = someValue.result[0].deviceTypeMap[device].at.lightState.value
                 }
                 else if (device.includes('backupCharger')) {
-                        console.log
-                                                var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
+                        var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
                 }
         if (batval == null) {
                 var batval = 'NA'
