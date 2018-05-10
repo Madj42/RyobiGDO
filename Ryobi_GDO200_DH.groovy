@@ -85,9 +85,11 @@ def parse(String description){
     	def doorstatus = msg.body.split(':')[2]
     	def lightstatus = msg.body.split(':')[1]
 	if (batstatus == "255") {
-	//sendEvent(name: "battery", value: "0")
+		sendEvent(name: "battery", value: 0)
 	} else if (batstatus == null) {
-	//sendEvent(name: "battery", value: "0")
+		sendEvent(name: "battery", value: 0)
+	} else if (batstatus == 'NA') {
+		sendEvent(name: "battery", value: 0)
 	} else {
 	sendEvent(name: "battery", value: batstatus)
 	}

@@ -14,7 +14,7 @@ const port = 3042
 const requestHandler = (request, response) => {
 const queryData = url.parse(request.url, true).query;
         response.writeHead(200, {"Content-Type": "text/plain"});
-//        var reqip = request.connection.remoteAddress.split(':')
+        var reqip = request.connection.remoteAddress.split(':')
 //        if (reqip[3] !== 'x.x.x.x') {
 //        response.end('Not Authorized')
 //        }
@@ -107,11 +107,25 @@ const someController = async function() {
                         var lightval = someValue.result[0].deviceTypeMap[device].at.lightState.value
                 }
                 else if (device.includes('backupCharger')) {
-                        var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
+                        console.log
+						var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
                 }
 }
+console.log('--------')
+console.log('Hub IP: ' + reqip[3])
+console.log('--------')
+console.log('API Key: ' + queryData.apikey)
+console.log('--------')
+console.log('Door ID: ' + queryData.doorid)
+console.log('--------')
 console.log('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
+console.log('--------')
 console.log(someValue.result[0].deviceTypeMap)
+console.log('--------')
+console.log(someValue.result[0])
+console.log('--------')
+console.log(someValue)
+console.log('--------')
 response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
 }
 someController()
