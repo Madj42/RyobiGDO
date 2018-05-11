@@ -1,7 +1,7 @@
 /*
 * Author: Justin Dybedahl
 * Ryobi GDO200 Device Handler
-* v1.2
+* v1.5
 */
 
 
@@ -64,8 +64,8 @@ metadata {
         valueTile("icon", "device.icon", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
             state "default", label: '', icon: "https://logo-png.com/logo/ryobi-logo.png"
         }
-		main "door"
-			details (["door","button","button2","refresh","battery","icon"])
+        main "door"
+            details (["door","button","button2","refresh","battery","icon"])
             }
 }
 
@@ -84,15 +84,11 @@ def parse(String description){
     	def batstatus = msg.body.split(':')[3]
     	def doorstatus = msg.body.split(':')[2]
     	def lightstatus = msg.body.split(':')[1]
-	if (batstatus == "255") {
-		sendEvent(name: "battery", value: 0)
-	} else if (batstatus == null) {
-		sendEvent(name: "battery", value: 0)
-	} else if (batstatus == 'NA') {
-		sendEvent(name: "battery", value: 0)
-	} else {
-	sendEvent(name: "battery", value: batstatus)
-	}
+    	if (batstatus <= "100") {
+			sendEvent(name: "battery", value: batstatus)
+		} else {
+			sendEvent(name: "battery", value: 0)
+        }
     	if (lightstatus == "false") {
         //log.debug "Light OFF"
         sendEvent(name: "switch2", value: "off")
@@ -115,6 +111,7 @@ def parse(String description){
         }
     }
 }
+
 def on() {
 def result = new physicalgraph.device.HubAction(
 				method: "GET",
@@ -127,7 +124,7 @@ def result = new physicalgraph.device.HubAction(
 			sendHubCommand(result)
 			sendEvent(name: "switch2", value: "on")
             getStatus()
-			log.debug "Turning light ON" 
+			log.trace "Turning light ON" 
             }
 
 def off() {
@@ -142,7 +139,7 @@ def result = new physicalgraph.device.HubAction(
 			sendHubCommand(result)
 			sendEvent(name: "switch2", value: "off")
             getStatus()
-			log.debug "Turning light OFF"
+			log.trace "Turning light OFF"
 	}
     
 def dooropen() {
@@ -158,7 +155,7 @@ def result = new physicalgraph.device.HubAction(
 			sendEvent(name: "switch1", value: "opening")
             getStatus()
             runIn(15,getStatus)
-			log.debug "OPENING Garage Door" 
+			log.trace "OPENING Garage Door" 
             }
             
 def doorclose() {
@@ -174,7 +171,7 @@ def result = new physicalgraph.device.HubAction(
 			sendEvent(name: "switch1", value: "closing")
             runIn(5,getStatus)
             runIn(25,getStatus)
-			log.debug "CLOSING Garage Door" 
+			log.trace "CLOSING Garage Door" 
             }
   
 
@@ -187,7 +184,7 @@ def getStatus() {
 				HOST: "${internal_ip}:${internal_port}"
 				])
 			sendHubCommand(result)
-			log.debug "Getting Status"
+			log.trace "Getting Status"
 	}
     
 private String convertIPtoHex(ipAddress) { 
