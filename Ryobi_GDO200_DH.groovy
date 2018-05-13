@@ -1,7 +1,8 @@
 /*
 * Author: Justin Dybedahl
 * Ryobi GDO200 Device Handler
-* v1.5
+* v2.0
+* Thanks to @Projectskydroid for the modifications.
 */
 
 
@@ -22,20 +23,23 @@ preferences {
 metadata {
 	definition (name: "Ryobi Garage Door", namespace: "madj42", author: "Justin Dybedahl") {
 		capability "Actuator"
-			capability "Switch"
-			capability "Sensor"
-            capability "Polling"
-            capability "Refresh"
-            capability "battery"
+		capability "Door Control"
+		capability "Garage Door Control"
+		capability "Switch"
+		capability "Sensor"
+		capability "Polling"
+		capability "Momentary"
+		capability "Relay Switch"
+		capability "Refresh"
+		capability "Battery"
 	}
 
     attribute "switch", "string"
-    attribute "switch2", "string"
 
     command "on"
     command "off"
-    command "dooropen"
-    command "doorclose"
+    command "open"
+    command "close"
 
 	// simulator metadata
 	simulator {
@@ -44,14 +48,14 @@ metadata {
 		// UI tile definitions
 	tiles {
   	    multiAttributeTile(name: "door", type: "lighting", width: 6, height: 4, canChangeIcon: false) {
-			tileAttribute("device.switch1", key: "PRIMARY_CONTROL") {
-            attributeState "closed", label: 'Door Closed', action: "dooropen", icon: "st.Home.home2", backgroundColor: "#ffffff", nextState: "opening"
-			attributeState "open", label: 'Door Open', action: "doorclose", icon: "st.Home.home2", backgroundColor: "#79b821", nextState: "closing"
-            attributeState "closing", label:'Door Closing', action:"doorclose", icon:"st.Home.home2", backgroundColor:"#00a0dc", nextState:"closed"
-			attributeState "opening", label:'Door Opening', action:"dooropen", icon:"st.Home.home2", backgroundColor:"#79b821", nextState:"open"
+			tileAttribute("device.door", key: "PRIMARY_CONTROL") {
+            attributeState "closed", label: 'Door Closed', action: "door control.open", icon: "st.Home.home2", backgroundColor: "#ffffff", nextState: "opening"
+			attributeState "open", label: 'Door Open', action: "door control.close", icon: "st.Home.home2", backgroundColor: "#79b821", nextState: "closing"
+            attributeState "closing", label:'Door Closing', action:"door control.close", icon:"st.Home.home2", backgroundColor:"#00a0dc", nextState:"closed"
+			attributeState "opening", label:'Door Opening', action:"door control.open", icon:"st.Home.home2", backgroundColor:"#79b821", nextState:"open"
             }
         }
-        standardTile("button2", "device.switch2", width: 1, height: 1, canChangeIcon: false) {
+        standardTile("button2", "device.switch", width: 1, height: 1, canChangeIcon: false) {
 			state "off", label: 'Light Off', action: "switch.on", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'Light On', action: "switch.off", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
 		}
@@ -63,9 +67,15 @@ metadata {
         }
         valueTile("icon", "device.icon", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
             state "default", label: '', icon: "https://logo-png.com/logo/ryobi-logo.png"
+		}
+		standardTile("open", "device.door", inactiveLabel: false, decoration: "flat") {
+			state "default", label:'open', action:"door control.open", icon:"st.Home.home2"
         }
-        main "door"
-            details (["door","button","button2","refresh","battery","icon"])
+		standardTile("close", "device.door", inactiveLabel: false, decoration: "flat") {
+			state "default", label:'close', action:"door control.close", icon:"st.Home.home2"  
+        }
+		main "door"
+			details (["door","button","button2","refresh","battery","icon","open","close"])
             }
 }
 
@@ -84,34 +94,37 @@ def parse(String description){
     	def batstatus = msg.body.split(':')[3]
     	def doorstatus = msg.body.split(':')[2]
     	def lightstatus = msg.body.split(':')[1]
-    	if (batstatus <= "100") {
-			sendEvent(name: "battery", value: batstatus)
-		} else {
-			sendEvent(name: "battery", value: 0)
-        }
+	if (batstatus == "255") {
+		sendEvent(name: "Battery", value: 0)
+	} else if (batstatus == null) {
+		sendEvent(name: "Battery", value: 0)
+	} else if (batstatus == 'NA') {
+		sendEvent(name: "Battery", value: 0)
+	} else {
+	sendEvent(name: "Battery", value: batstatus)
+	}
     	if (lightstatus == "false") {
         //log.debug "Light OFF"
-        sendEvent(name: "switch2", value: "off")
+        sendEvent(name: "switch", value: "off")
    		} else if (lightstatus == "true") {
         //log.debug "Light ON"
-        sendEvent(name: "switch2", value: "on")
+        sendEvent(name: "switch", value: "on")
         }
        	if (doorstatus == "0") {
         //log.debug "Door Closed"
-        sendEvent(name: "switch1", value: "closed")
+        sendEvent(name: "door", value: "closed")
    		} else if (doorstatus == "1") {
         //log.debug "Door Open"
-        sendEvent(name: "switch1", value: "open")
+        sendEvent(name: "door", value: "open")
         } else if (doorstatus == "2") {
         //log.debug "Door Closing"
-        sendEvent(name: "switch1", value: "closing")
+        sendEvent(name: "door", value: "closing")
         } else if (doorstatus == "3") {
         //log.debug "Door Opening"
-        sendEvent(name: "switch1", value: "opening")
+        sendEvent(name: "door", value: "opening")
         }
     }
 }
-
 def on() {
 def result = new physicalgraph.device.HubAction(
 				method: "GET",
@@ -122,9 +135,9 @@ def result = new physicalgraph.device.HubAction(
 				)
      
 			sendHubCommand(result)
-			sendEvent(name: "switch2", value: "on")
+			sendEvent(name: "switch", value: "on")
             getStatus()
-			log.trace "Turning light ON" 
+			log.debug "Turning light ON" 
             }
 
 def off() {
@@ -137,12 +150,12 @@ def result = new physicalgraph.device.HubAction(
 				)
                 
 			sendHubCommand(result)
-			sendEvent(name: "switch2", value: "off")
+			sendEvent(name: "switch", value: "off")
             getStatus()
-			log.trace "Turning light OFF"
+			log.debug "Turning light OFF"
 	}
     
-def dooropen() {
+def open() {
 def result = new physicalgraph.device.HubAction(
 				method: "GET",
 				path: "/?name=dooropen&doorid=${doorid}&apikey=${apikey}&email=${email}&pass=${pass}",
@@ -152,13 +165,13 @@ def result = new physicalgraph.device.HubAction(
 				)
             
 			sendHubCommand(result)
-			sendEvent(name: "switch1", value: "opening")
+			sendEvent(name: "door", value: "opening")
             getStatus()
             runIn(15,getStatus)
-			log.trace "OPENING Garage Door" 
+			log.debug "OPENING Garage Door" 
             }
             
-def doorclose() {
+def close() {
 def result = new physicalgraph.device.HubAction(
 				method: "GET",
 				path: "/?name=doorclose&doorid=${doorid}&apikey=${apikey}&email=${email}&pass=${pass}",
@@ -168,10 +181,10 @@ def result = new physicalgraph.device.HubAction(
 				)
            
 			sendHubCommand(result)
-			sendEvent(name: "switch1", value: "closing")
+			sendEvent(name: "door", value: "closing")
             runIn(5,getStatus)
             runIn(25,getStatus)
-			log.trace "CLOSING Garage Door" 
+			log.debug "CLOSING Garage Door" 
             }
   
 
@@ -184,7 +197,7 @@ def getStatus() {
 				HOST: "${internal_ip}:${internal_port}"
 				])
 			sendHubCommand(result)
-			log.trace "Getting Status"
+			log.debug "Getting Status"
 	}
     
 private String convertIPtoHex(ipAddress) { 
