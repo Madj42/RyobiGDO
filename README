@@ -1,0 +1,41 @@
+Ryobi GDO200 Device Type Handler and Proxy for Smarthings
+
+
+Requirements:
+
+Secondary computer capable of running Node.js server
+Smartthings Hub
+Ryobi GDO200 Garage Door with wifi setup
+
+
+Installation of proxy service for Raspberry Pi:
+
+1. Start shell session on Raspberry Pi (via SSH or console)
+2. Install node.js by running the following commands:
+	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+	sudo apt-get install -y nodejs
+	sudo apt-get install -y build-essential
+3. Download the RyobiGDOProxy.js file to the Raspberry Pi host.
+4. Run the proxy service by typing "node RyobiGDOProxy.js".
+
+
+Installation of DTH to Smartthings:
+
+1. Navigate to http://graph.api.smartthings.com and login.
+2. Click on My Locations at the top and then click on your location name in the list.
+3. Click on the My Device Handlers section at the top.
+4. You can either add the GitHub repository to your list of repositories or install it manually. To
+   install it manually click on the Create New Device Handler button in the upper-right.
+5. Click on From Code.
+6. Copy and paste the contents of Ryobi_GDO200_DH.groovy into the text box.
+7. Click the Create button at the bottom.
+8. Open the Smartthings app on your mobile device and open the new device.
+9. Click on the gear in the upper-right to open the settings.
+10. Enter the IP address of the computer running the node proxy service in the IP address and enter 3042 for the port (unless you changed it).
+11. Enter you email address and password that is associated with your account for the Ryobi GDO.
+12. Save the settings and test the new device.
+
+
+For help, please post here:
+
+https://community.smartthings.com/t/ryobi-modular-smart-garage-door-opener/
