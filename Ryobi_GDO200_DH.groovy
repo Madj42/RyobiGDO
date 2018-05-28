@@ -1,20 +1,23 @@
 /*
 * Author: Justin Dybedahl
 * Ryobi GDO200 Device Handler
-* v2.0
+* v2.0.1
 * Thanks to @Projectskydroid for the modifications.
 */
 
+def clientVersion() {
+    return "2.0.1"
+}
 
 preferences {    
-	section("Internal Access"){
-		input "email", "text", title: "Email Address",required: true
-		input "pass","text", title: "Password",required:true
-		input "apikey", "text", title: "API Key",required: true		
-		input "doorid", "text", title: "Garage Door ID",required: true
+	section("Configuration Parameters"){
+		input "email", "email", title: "Email Address",required: true
+		input "pass","password", title: "Password",required:true
 		input "internal_ip", "text", title: "Internal IP", required: true
 		input "internal_port", "text", title: "Internal Port (default is 3042)", required: true
-	}
+		input title: "", description: "Ryobi GDO200 Device Handler v${clientVersion()}", displayDuringSetup: false, type: "paragraph", element: "paragraph", required: true
+        input title: "", description: "http://www.github.com/Madj42/RyobiGDO", displayDuringSetup: false, type: "paragraph", element: "paragraph"	
+    }
 }
 
 
@@ -214,6 +217,7 @@ private String convertPortToHex(port) {
 }
 
 def updated() {
+	runEvery1Minute("poll")
 	if (!state.updatedLastRanAt || now() >= state.updatedLastRanAt + 5000) {
 		state.updatedLastRanAt = now()
 		log.debug "Executing 'updated()'"
