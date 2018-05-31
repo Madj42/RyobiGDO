@@ -15,6 +15,9 @@ Installation of proxy service for Raspberry Pi:
 	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 	sudo apt-get install -y nodejs
 	sudo apt-get install -y build-essential
+3. Install the third-party modules used by the proxy service:
+	npm install ws
+	npm install request
 3. Download the RyobiGDOProxy.js file to the Raspberry Pi host.
 4. Run the proxy service by typing "node RyobiGDOProxy.js".
 
