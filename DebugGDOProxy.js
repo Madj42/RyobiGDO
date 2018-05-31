@@ -1,5 +1,5 @@
 // Project Name: Ryobi GDO Proxy for Node.js
-// Version: 1.1
+// Version: 2.0
 // Author: Justin Dybedahl
 //
 // https://github.com/Madj42/RyobiGDO/
@@ -44,35 +44,57 @@ const queryData = url.parse(request.url, true).query;
 
         if (queryData.name == null) {
                 response.end('No name specified');
-        } else if (queryData.apikey == null) {
-                response.end('No API Key specified');
-        } else if (queryData.doorid == null) {
-                response.end('No Door ID sepecified');
         } else if (queryData.email == null) {
                 response.end('No email specified');
         } else if (queryData.pass == null) {
                 response.end('No password specified');
         }
+		var cleanpass = queryData.pass.replace(/[<>+\/'"*()?]/g, "\\$&");
+        var request = require('request');
+                const getAPIKey = () => new Promise((resolve, reject) => {
+                        var options = {url:'https://tti.tiwiconnect.com/api/login',method:'POST',json:JSON.parse('{"username":"' + queryData.email + '","password":"' + cleanpass + '"}')}
+                                request(options, (err, res, body) => {
+                                if (err) return reject(err)
+                                        resolve(body)
+                                })
+                })
+
+                const getAPIKeyController = async function() {
+                        var someValue = await getAPIKey()
+                                var apikey = someValue.result.auth.apiKey
+
+                            const getDoorID = () => new Promise((resolve, reject) => {
+                                        var options = {url:'https://tti.tiwiconnect.com/api/devices',method:'GET',json:JSON.parse('{"username":"' + queryData.email + '","password":"' + cleanpass + '"}')}
+                                                request(options, (err, res, body) => {
+                                                if (err) return reject(err)
+                                                resolve(body)
+                                        })
+                                })
+
+                                const getDoorIDController = async function() {
+                                        var someValue = await getDoorID()
+                                        //console.log(someValue.result[0].varName)
+                                        var doorid = someValue.result[0].varName
 
         if (cmdtype == 0) {
         var ws = new WebSocket('wss://tti.tiwiconnect.com/api/wsrpc', 'echo-protocol');
         ws.onopen = function()
         {
-        ws.send(JSON.parse(JSON.stringify('{"jsonrpc":"2.0","id":3,"method":"srvWebSocketAuth","params": {"varName": "' + queryData.email + '","apiKey": "' + queryData.apikey + '"}}')));
+        ws.send(JSON.parse(JSON.stringify('{"jsonrpc":"2.0","id":3,"method":"srvWebSocketAuth","params": {"varName": "' + queryData.email + '","apiKey": "' + apikey + '"}}')));
         function freeze(time) {
             const stop = new Date().getTime() + time;
          while(new Date().getTime() < stop);
         }
         freeze(250);
-        ws.send(JSON.parse(JSON.stringify('{"jsonrpc":"2.0","method":"gdoModuleCommand","params":{"msgType":16,"moduleType":5,"portId":7,"moduleMsg":{"' + cmd + '":' + cmdstate + '},"topic":"' + queryData.doorid +'"}}')));
+        ws.send(JSON.parse(JSON.stringify('{"jsonrpc":"2.0","method":"gdoModuleCommand","params":{"msgType":16,"moduleType":5,"portId":7,"moduleMsg":{"' + cmd + '":' + cmdstate + '},"topic":"' + doorid +'"}}')));
         response.end("Ran Command");
         ws.close()
         }
         } else if (cmdtype == 1) {
         var request = require('request');
 
-const doSomething = () => new Promise((resolve, reject) => {
-var options = {url:'https://tti.tiwiconnect.com/api/devices/' + queryData.doorid + '',method:'GET',json:JSON.parse('{"username":"' + queryData.email + '","password":"' + queryData.pass + '"}')}
+const getStatus = () => new Promise((resolve, reject) => {
+var options = {url:'https://tti.tiwiconnect.com/api/devices/' + doorid + '',method:'GET',json:JSON.parse('{"username":"' + queryData.email + '","password":"' + cleanpass + '"}')}
     function freeze(time) {
             const stop = new Date().getTime() + time;
          while(new Date().getTime() < stop);
@@ -85,46 +107,39 @@ var options = {url:'https://tti.tiwiconnect.com/api/devices/' + queryData.doorid
     })
 })
 
-const someController = async function() {
-    var someValue = await doSomething()
-        // someValue2 = someValue.result[0].deviceTypeMap
-        for(var device in someValue.result[0].deviceTypeMap) {
+const getStatusController = async function() {
+    var statusValue = await getStatus()
+        for(var device in statusValue.result[0].deviceTypeMap) {
                 if (device.includes('garageDoor')) {
-                        var doorval = someValue.result[0].deviceTypeMap[device].at.doorState.value
+                        var doorval = statusValue.result[0].deviceTypeMap[device].at.doorState.value
                 }
                 else if (device.includes('garageLight')) {
-                        var lightval = someValue.result[0].deviceTypeMap[device].at.lightState.value
+                        var lightval = statusValue.result[0].deviceTypeMap[device].at.lightState.value
                 }
                 else if (device.includes('backupCharger')) {
-                        var batval = someValue.result[0].deviceTypeMap[device].at.chargeLevel.value
+                        var batval = statusValue.result[0].deviceTypeMap[device].at.chargeLevel.value
                 }
         if (batval == null) {
                 var batval = 'NA'
         }
 }
 console.log('--------')
-console.log('Hub IP: ' + reqip[3])
 console.log('--------')
-console.log('API Key: ' +queryData.apikey)
+console.log(statusValue.result[0].deviceTypeMap)
 console.log('--------')
-console.log('Door ID: ' + queryData.doorid)
+console.log(batval)
 console.log('--------')
-console.log('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
-console.log('Light: ' + lightval)
-console.log('Door: ' + doorval)
-console.log('Battery: ' + batval)
 console.log('--------')
-console.log(someValue.result[0].deviceTypeMap)
-console.log('--------')
-console.log(someValue.result[0])
-console.log('--------')
-console.log(someValue)
-console.log('--------')
-response.end('status:' + String(lightval) + ':' + String(doorval) + ':' + String(batval))
 }
-someController()
+getStatusController()
 
 }
+}
+
+getDoorIDController()
+}
+getAPIKeyController()
+
 }
 
 const server = http.createServer(requestHandler)
