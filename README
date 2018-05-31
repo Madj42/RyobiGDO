@@ -22,6 +22,33 @@ Installation of proxy service for Raspberry Pi:
 4. Run the proxy service by typing "node RyobiGDOProxy.js".
 
 
+Starting proxy service at boot on Raspberry Pi:
+
+1. Create a file named GDOProxy.service under /etc/systemd/system.
+2. The contents of this file should be:
+
+	[Unit]
+	Description=Ryobi GDO Proxy Service
+	After=network.target remote-fs.target
+
+	[Service]
+	Type=simple
+	Enviroment=NODE_ENV=production
+	ExecStart=/usr/bin/node RyobiGDOProxy.js
+	Restart=always
+	RestartSec=10
+	KillMode=process
+	WorkingDirectory=/home/root/GDOProxy
+
+	[Install]
+	WantedBy=multi-user.target
+
+3. Be sure to change the WorkingDirectory value to the folder where the RyobiGDOProxy.js file resides.
+3. Run the commands:
+	sudo systemctl enable GDOProxy.service
+	sudo systemctl start GDOProxy
+
+
 Installation of DTH to Smartthings:
 
 1. Navigate to http://graph.api.smartthings.com and login.
