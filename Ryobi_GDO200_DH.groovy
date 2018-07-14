@@ -1,12 +1,12 @@
 /*
 * Author: Justin Dybedahl
-* Ryobi GDO200 Device Handler
-* v2.0.1
+* Ryobi GDO200/GDO201/GDO500 Device Handler
+* v2.5
 * Thanks to @Projectskydroid for the modifications.
 */
 
 def clientVersion() {
-    return "2.0.1"
+    return "2.5"
 }
 
 preferences {    
@@ -65,8 +65,8 @@ metadata {
          standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
             state "default", action:"refresh", icon:"st.secondary.refresh"
         }
-        valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
-            state "battery", label: 'Battery: ${currentValue}%'
+        valueTile("battery", "device.Battery", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
+            state "Battery", label: 'Battery: ${currentValue}%'
         }
         valueTile("icon", "device.icon", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
             state "default", label: '', icon: "https://logo-png.com/logo/ryobi-logo.png"
