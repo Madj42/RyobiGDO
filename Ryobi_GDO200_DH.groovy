@@ -1,12 +1,12 @@
 /*
 * Author: Justin Dybedahl
 * Ryobi GDO200/GDO201/GDO500 Device Handler
-* v2.5
+* v2.6
 * Thanks to @Projectskydroid for the modifications.
 */
 
 def clientVersion() {
-    return "2.5"
+    return "2.6"
 }
 
 preferences {    
@@ -17,6 +17,7 @@ preferences {
 		input "internal_port", "text", title: "Internal Port (default is 3042)", required: true
 		input title: "", description: "Ryobi GDO200 Device Handler v${clientVersion()}", displayDuringSetup: false, type: "paragraph", element: "paragraph", required: true
         input title: "", description: "http://www.github.com/Madj42/RyobiGDO", displayDuringSetup: false, type: "paragraph", element: "paragraph"	
+		input "pollInterval", "number", title: "Polling Interval", description: "Change polling frequency (in minutes)", defaultValue:4, range: "1..59", required: true, displayDuringSetup: true
     }
 }
 
@@ -52,15 +53,15 @@ metadata {
 	tiles {
   	    multiAttributeTile(name: "door", type: "lighting", width: 6, height: 4, canChangeIcon: false) {
 			tileAttribute("device.door", key: "PRIMARY_CONTROL") {
-            attributeState "closed", label: 'Door Closed', action: "door control.open", icon: "st.Home.home2", backgroundColor: "#ffffff", nextState: "opening"
-			attributeState "open", label: 'Door Open', action: "door control.close", icon: "st.Home.home2", backgroundColor: "#79b821", nextState: "closing"
-            attributeState "closing", label:'Door Closing', action:"door control.close", icon:"st.Home.home2", backgroundColor:"#00a0dc", nextState:"closed"
-			attributeState "opening", label:'Door Opening', action:"door control.open", icon:"st.Home.home2", backgroundColor:"#79b821", nextState:"open"
+            attributeState "closed", label: 'Door Closed', action: "door control.open", icon: "st.Home.home2", backgroundColor: "#ffffff"
+			attributeState "open", label: 'Door Open', action: "door control.close", icon: "st.Home.home2", backgroundColor: "#79b821"
+            attributeState "closing", label:'Door Closing', action:"door control.close", icon:"st.Home.home2", backgroundColor:"#00a0dc"
+			attributeState "opening", label:'Door Opening', action:"door control.open", icon:"st.Home.home2", backgroundColor:"#79b821"
             }
         }
         standardTile("button2", "device.switch", width: 1, height: 1, canChangeIcon: false) {
-			state "off", label: 'Light Off', action: "switch.on", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'Light On', action: "switch.off", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
+			state "off", label: 'Light Off', action: "switch.on", icon: "st.Lighting.light11", backgroundColor: "#ffffff"
+			state "on", label: 'Light On', action: "switch.off", icon: "st.Lighting.light11", backgroundColor: "#79b821"
 		}
          standardTile("refresh", "device.switch", inactiveLabel: false, decoration: "flat") {
             state "default", action:"refresh", icon:"st.secondary.refresh"
@@ -83,11 +84,16 @@ metadata {
 }
 
 def poll() {
-refresh()
+getStatus()
 }
 
 def refresh() {
-getStatus()
+poll()
+}
+
+def updated() {
+    	runIn(3, "updateDeviceNetworkID")
+		schedule("0 0/${settings.pollInterval} * * * ?", poll)
 }
 
 def parse(String description){
@@ -128,6 +134,7 @@ def parse(String description){
         }
     }
 }
+
 def on() {
 def result = new physicalgraph.device.HubAction(
 				method: "GET",
@@ -139,7 +146,7 @@ def result = new physicalgraph.device.HubAction(
      
 			sendHubCommand(result)
 			sendEvent(name: "switch", value: "on")
-            getStatus()
+            runIn(5,getStatus)
 			log.debug "Turning light ON" 
             }
 
@@ -154,7 +161,7 @@ def result = new physicalgraph.device.HubAction(
                 
 			sendHubCommand(result)
 			sendEvent(name: "switch", value: "off")
-            getStatus()
+           runIn(5,getStatus)
 			log.debug "Turning light OFF"
 	}
     
@@ -169,8 +176,8 @@ def result = new physicalgraph.device.HubAction(
             
 			sendHubCommand(result)
 			sendEvent(name: "door", value: "opening")
-            getStatus()
-            runIn(15,getStatus)
+            runIn(5,getStatus)
+            runIn(17,getStatus)
 			log.debug "OPENING Garage Door" 
             }
             
@@ -186,12 +193,10 @@ def result = new physicalgraph.device.HubAction(
 			sendHubCommand(result)
 			sendEvent(name: "door", value: "closing")
             runIn(5,getStatus)
-            runIn(25,getStatus)
+            runIn(21,getStatus)
 			log.debug "CLOSING Garage Door" 
             }
-  
-
-
+ 
 def getStatus() {
 	def result = new physicalgraph.device.HubAction(
 				method: "GET",
@@ -215,19 +220,6 @@ private String convertPortToHex(port) {
     //log.debug hexport
     return hexport
 }
-
-def updated() {
-	runEvery1Minute("poll")
-	if (!state.updatedLastRanAt || now() >= state.updatedLastRanAt + 5000) {
-		state.updatedLastRanAt = now()
-		log.debug "Executing 'updated()'"
-    	runIn(3, "updateDeviceNetworkID")
-	}
-	else {
-//		log.trace "updated(): Ran within last 5 seconds so aborting."
-	}
-}
-
 
 def updateDeviceNetworkID() {
 	log.debug "Executing 'updateDeviceNetworkID'"
